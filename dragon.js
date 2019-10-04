@@ -27,6 +27,7 @@ var scene = new THREE.Scene();
 var renderer = new THREE.WebGLRenderer();
 var boxGeom;
 var dragonBody, dragonBodyFrame, dragonHeadFrame, dragonHead;
+var dragonTailLinkFrames = [], dragonTailLinks = [];
 var dragonNeckLinkFrames = [], dragonNeckLinks = [];
 renderer.setClearColor(0xd0f0d0);     // set background colour
 canvas.appendChild(renderer.domElement);
@@ -138,6 +139,7 @@ function initObjects() {
   dragonBodyFrame.updateMatrixWorld();
 
   initNeckLinks(10, 0.1, 0.05);
+  initTailLinks(8, 0.1, 0.05, 0.05);
 
   // textured floor
   floorTexture = new THREE.TextureLoader().load('images/floor.jpg');
@@ -206,6 +208,47 @@ function initNeckLinks(num, incrWidth, incrLength) {
   dragonHead.matrix.multiply(new THREE.Matrix4().makeTranslation(headLength / 2, -headSnout / 2, 0));
   dragonHead.matrix.multiply(new THREE.Matrix4().makeScale(headLength, headSnout, headWidth));
   dragonHead.updateMatrixWorld();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+//  Create a jointed tail
+/////////////////////////////////////////////////////////////////////////////////////
+
+function initTailLinks(num, incrLength, incrWidth, incrHeight) {
+  var currMatrix = new THREE.Matrix4().copy(dragonBodyFrame.matrix);
+  currMatrix.multiply(new THREE.Matrix4().makeTranslation(-2, 0.5, 0));
+  currMatrix.multiply(new THREE.Matrix4().makeRotationZ(Math.PI / 30));
+
+  var currLength = 0.2, currWidth = 0.5, currHeight = 0.5, theta = Math.PI / 30;
+
+  for(var i = 0; i < num; i++) {
+    var dragonTailLinkFrame, dragonTailLink;
+
+    // Create the NeckLink frame
+    dragonTailLinkFrame = new THREE.AxesHelper(1); 
+    scene.add(dragonTailLinkFrame);
+    dragonTailLinkFrame.matrixAutoUpdate = false;
+    dragonTailLinkFrame.matrix.copy(currMatrix);
+    dragonTailLinkFrame.updateMatrixWorld();
+    dragonTailLinkFrames.push(dragonTailLinkFrame);
+
+    // Create the body block
+    dragonTailLink = new THREE.Mesh(boxGeom, diffuseMaterial);
+    scene.add(dragonTailLink);
+    dragonTailLink.matrixAutoUpdate = false;
+    dragonTailLink.matrix.copy(currMatrix);
+    dragonTailLink.matrix.multiply(new THREE.Matrix4().makeTranslation(-currLength / 2, -currHeight / 2, 0));
+    dragonTailLink.matrix.multiply(new THREE.Matrix4().makeScale(currLength, currHeight, currWidth));
+    dragonTailLinks.push(dragonTailLink);
+    dragonTailLink.updateMatrixWorld();
+
+    // Update currMatrix
+    currMatrix.multiply(new THREE.Matrix4().makeTranslation(-currLength, 0, 0));
+    currMatrix.multiply(new THREE.Matrix4().makeRotationZ(theta));
+
+    // Update currLength, currWidth
+    currLength += incrLength; currWidth -= incrWidth; currHeight -= incrHeight;
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
