@@ -5,16 +5,16 @@
 
 console.log('hello world');
 
-a=5;  
-b=2.6;
-console.log('a=',a,'b=',b);
-myvector = new THREE.Vector3(0,1,2);
-console.log('myvector =',myvector);
+a = 5;
+b = 2.6;
+console.log('a=', a, 'b=', b);
+myvector = new THREE.Vector3(0, 1, 2);
+console.log('myvector =', myvector);
 
 var animation = true;
-var meshesLoaded = false;
+var meshesLoaded = true;
 
-var meshes = {};  
+var meshes = {};
 var RESOURCES_LOADED = false;
 
 // SETUP RENDERER & SCENE
@@ -25,6 +25,9 @@ var light;
 var ambientLight;
 var scene = new THREE.Scene();
 var renderer = new THREE.WebGLRenderer();
+var boxGeom;
+var dragonBody, dragonBodyFrame, dragonHeadFrame, dragonHead;
+var dragonNeckLinkFrames = [], dragonNeckLinks = [];
 renderer.setClearColor(0xd0f0d0);     // set background colour
 canvas.appendChild(renderer.domElement);
 
@@ -33,36 +36,36 @@ canvas.appendChild(renderer.domElement);
 //////////////////////////////////////////////////////////
 
 function initCamera() {
-    // set up M_proj    (internally:  camera.projectionMatrix )
-    var cameraFov = 30;     // initial camera vertical field of view, in degrees
-      // view angle, aspect ratio, near, far
-    camera = new THREE.PerspectiveCamera(cameraFov,1,0.1,1000); 
+  // set up M_proj    (internally:  camera.projectionMatrix )
+  var cameraFov = 30;     // initial camera vertical field of view, in degrees
+  // view angle, aspect ratio, near, far
+  camera = new THREE.PerspectiveCamera(cameraFov, 1, 0.1, 1000);
 
-    var width = 10;  var height = 5;
-//    camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 0.1, 1000 );
+  var width = 10; var height = 5;
+  //    camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 0.1, 1000 );
 
-    // set up M_view:   (internally:  camera.matrixWorldInverse )
-    camera.position.set(0,12,20);
-    camera.up = new THREE.Vector3(0,1,0);
-    camera.lookAt(0,0,0);
-    scene.add(camera);
+  // set up M_view:   (internally:  camera.matrixWorldInverse )
+  camera.position.set(0, 12, 20);
+  camera.up = new THREE.Vector3(0, 1, 0);
+  camera.lookAt(0, 0, 0);
+  scene.add(camera);
 
-      // SETUP ORBIT CONTROLS OF THE CAMERA
-    var controls = new THREE.OrbitControls(camera);
-    controls.damping = 0.2;
-    controls.autoRotate = false;
+  // SETUP ORBIT CONTROLS OF THE CAMERA
+  var controls = new THREE.OrbitControls(camera);
+  controls.damping = 0.2;
+  controls.autoRotate = false;
 };
 
 // ADAPT TO WINDOW RESIZE
 function resize() {
-  renderer.setSize(window.innerWidth,window.innerHeight);
-  camera.aspect = window.innerWidth/window.innerHeight;
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 }
 
 //SCROLLBAR FUNCTION DISABLE
 window.onscroll = function () {
-     window.scrollTo(0,0);
+  window.scrollTo(0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////	
@@ -70,15 +73,15 @@ window.onscroll = function () {
 ////////////////////////////////////////////////////////////////////////	
 
 function init() {
-    console.log('init called');
+  console.log('init called');
 
-    initCamera();
-    initMotions();
-    initLights();
-    initObjects();
+  initCamera();
+  initMotions();
+  initLights();
+  initObjects();
 
-    window.addEventListener('resize',resize);
-    resize();
+  window.addEventListener('resize', resize);
+  resize();
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -86,7 +89,7 @@ function init() {
 ////////////////////////////////////////////////////////////////////////
 
 function initMotions() {
-    // Do nothing for now
+  // Do nothing for now
 }
 
 /////////////////////////////////////	
@@ -94,178 +97,129 @@ function initMotions() {
 /////////////////////////////////////	
 
 function initLights() {
-    light = new THREE.PointLight(0xffffff);
-    light.position.set(0,4,2);
-    scene.add(light);
-    ambientLight = new THREE.AmbientLight(0x606060);
-    scene.add(ambientLight);
+  light = new THREE.PointLight(0xffffff);
+  light.position.set(0, 4, 2);
+  scene.add(light);
+  ambientLight = new THREE.AmbientLight(0x606060);
+  scene.add(ambientLight);
 }
 
 /////////////////////////////////////	
 // MATERIALS
 /////////////////////////////////////	
 
-var diffuseMaterial = new THREE.MeshLambertMaterial( {color: 0xffffff} );
-var diffuseMaterial2 = new THREE.MeshLambertMaterial( {color: 0xffffff, side: THREE.DoubleSide } );
-var basicMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000} );
-var armadilloMaterial = new THREE.MeshBasicMaterial( {color: 0x7fff7f} );
+var diffuseMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+var diffuseMaterial2 = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+var basicMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+var armadilloMaterial = new THREE.MeshBasicMaterial({ color: 0x7fff7f });
 
 /////////////////////////////////////	
-// initObjects():  setup objects in the scene
+// initObjects():  setup objects in the scene 
 /////////////////////////////////////	
 
 function initObjects() {
-    worldFrame = new THREE.AxesHelper(5) ;
-    scene.add(worldFrame);
+  worldFrame = new THREE.AxesHelper(5);
+  scene.add(worldFrame);
 
-    // textured floor
-    floorTexture = new THREE.TextureLoader().load('images/floor.jpg');
-    floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
-    floorTexture.repeat.set(1, 1);
-    floorMaterial = new THREE.MeshBasicMaterial({ map: floorTexture, side: THREE.DoubleSide });
-    floorGeometry = new THREE.PlaneBufferGeometry(15, 15);
-    floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.position.y = -1.1;
-    floor.rotation.x = Math.PI / 2;
-    scene.add(floor);
+  // Set the dragon body frame
+  dragonBodyFrame = new THREE.AxesHelper(1); scene.add(dragonBodyFrame);
+  dragonBodyFrame.matrixAutoUpdate = false;
+  dragonBodyFrame.matrix.identity();
+  dragonBodyFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
+  dragonBodyFrame.updateMatrixWorld();
+
+  // Body of the dragon
+  boxGeom = new THREE.BoxGeometry(1, 1, 1);
+  dragonBody = new THREE.Mesh(boxGeom, diffuseMaterial);
+  scene.add(dragonBody);
+  dragonBody.matrixAutoUpdate = false;
+  dragonBody.matrix.copy(dragonBodyFrame.matrix);
+  dragonBody.matrix.multiply(new THREE.Matrix4().makeScale(4, 1, 2));
+  dragonBodyFrame.updateMatrixWorld();
+
+  initNeckLinks(10, 0.1, 0.05);
+
+  // textured floor
+  floorTexture = new THREE.TextureLoader().load('images/floor.jpg');
+  floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
+  floorTexture.repeat.set(1, 1);
+  floorMaterial = new THREE.MeshBasicMaterial({ map: floorTexture, side: THREE.DoubleSide });
+  floorGeometry = new THREE.PlaneBufferGeometry(15, 15);
+  floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.position.y = -1.1;
+  floor.rotation.x = Math.PI / 2;
+  scene.add(floor);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-//  initHand():  define all geometry associated with the hand
+//  Create a jointed neck
 /////////////////////////////////////////////////////////////////////////////////////
 
-function initHand() {
-    handMaterial = new THREE.MeshLambertMaterial( {color: 0xffffff} );
-    boxGeometry = new THREE.BoxGeometry( 1, 1, 1 );    // width, height, depth
+function initNeckLinks(num, incrWidth, incrLength) {
+  var currMatrix = new THREE.Matrix4().copy(dragonBodyFrame.matrix);
+  currMatrix.multiply(new THREE.Matrix4().makeTranslation(2, 0.5, 0));
+  currMatrix.multiply(new THREE.Matrix4().makeRotationZ(Math.PI / 12));
 
-    link1 = new THREE.Mesh( boxGeometry, handMaterial );  scene.add( link1 );
-    linkFrame1   = new THREE.AxesHelper(1) ;   scene.add(linkFrame1);
-    link2 = new THREE.Mesh( boxGeometry, handMaterial );  scene.add( link2 );
-    linkFrame2   = new THREE.AxesHelper(1) ;   scene.add(linkFrame2);
-    link3 = new THREE.Mesh( boxGeometry, handMaterial );  scene.add( link3 );
-    linkFrame3   = new THREE.AxesHelper(1) ;   scene.add(linkFrame3);
-    link4 = new THREE.Mesh( boxGeometry, handMaterial );  scene.add( link4 );
-    linkFrame4   = new THREE.AxesHelper(1) ;   scene.add(linkFrame4);
-    link5 = new THREE.Mesh( boxGeometry, handMaterial );  scene.add( link5 );
-    linkFrame5   = new THREE.AxesHelper(1) ;   scene.add(linkFrame5);
+  var currLength = 0.2, currWidth = 1.75, theta = Math.PI / 30;
 
-    link1.matrixAutoUpdate = false;  
-    link2.matrixAutoUpdate = false;  
-    link3.matrixAutoUpdate = false;  
-    link4.matrixAutoUpdate = false;  
-    link5.matrixAutoUpdate = false;
-    linkFrame1.matrixAutoUpdate = false;  
-    linkFrame2.matrixAutoUpdate = false;  
-    linkFrame3.matrixAutoUpdate = false;  
-    linkFrame4.matrixAutoUpdate = false;  
-    linkFrame5.matrixAutoUpdate = false;
+  for(var i = 0; i < num; i++) {
+    var dragonNeckLinkFrame, dragonNeckLink;
+
+    // Create the NeckLink frame
+    dragonNeckLinkFrame = new THREE.AxesHelper(1); scene.add(dragonNeckLinkFrame);
+    dragonNeckLinkFrame.matrixAutoUpdate = false;
+    dragonNeckLinkFrame.matrix.copy(currMatrix);
+    dragonNeckLinkFrame.updateMatrixWorld();
+    dragonNeckLinkFrames.push(dragonNeckLinkFrame);
+
+    // Create the body block
+    dragonNeckLink = new THREE.Mesh(boxGeom, diffuseMaterial);
+    scene.add(dragonNeckLink);
+    dragonNeckLink.matrixAutoUpdate = false;
+    dragonNeckLink.matrix.copy(currMatrix);
+    dragonNeckLink.matrix.multiply(new THREE.Matrix4().makeTranslation(currLength / 2, -0.5, 0));
+    dragonNeckLink.matrix.multiply(new THREE.Matrix4().makeScale(currLength, 1, currWidth));
+    dragonNeckLinks.push(dragonNeckLink);
+    dragonNeckLink.updateMatrixWorld();
+
+    // Update currMatrix
+    currMatrix.multiply(new THREE.Matrix4().makeTranslation(currLength, 0, 0));
+    currMatrix.multiply(new THREE.Matrix4().makeRotationZ(theta));
+
+    // Update currLength, currWidth
+    currLength += incrLength; currWidth -= incrWidth;
+  }
+
+  var headLength = 1, headWidth = 1.5, headSnout = 2;
+
+  // Create the head of the dragon
+  dragonHeadFrame = new THREE.AxesHelper(1); 
+  scene.add(dragonHeadFrame);
+  dragonHeadFrame.matrixAutoUpdate = false;
+  dragonHeadFrame.matrix.copy(currMatrix);
+  dragonHeadFrame.updateMatrixWorld();
+
+  dragonHead = new THREE.Mesh(boxGeom, diffuseMaterial);
+  scene.add(dragonHead);
+  dragonHead.matrixAutoUpdate = false;
+  dragonHead.matrix.copy(currMatrix);
+  dragonHead.matrix.multiply(new THREE.Matrix4().makeTranslation(headLength / 2, -headSnout / 2, 0));
+  dragonHead.matrix.multiply(new THREE.Matrix4().makeScale(headLength, headSnout, headWidth));
+  dragonHead.updateMatrixWorld();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 //  create customShader material
 /////////////////////////////////////////////////////////////////////////////////////
 
-var customShaderMaterial = new THREE.ShaderMaterial( {
-//        uniforms: { textureSampler: {type: 't', value: floorTexture}},
-	vertexShader: document.getElementById( 'customVertexShader' ).textContent,
-	fragmentShader: document.getElementById( 'customFragmentShader' ).textContent
-} );
+var customShaderMaterial = new THREE.ShaderMaterial({
+  //        uniforms: { textureSampler: {type: 't', value: floorTexture}},
+  vertexShader: document.getElementById('customVertexShader').textContent,
+  fragmentShader: document.getElementById('customFragmentShader').textContent
+});
 
 var ctx = renderer.context;
 ctx.getShaderInfoLog = function () { return '' };   // stops shader warnings, seen in some browsers
-
-////////////////////////////////////////////////////////////////////////	
-// initFileObjects():    read object data from OBJ files;  see onResourcesLoaded() for instances
-////////////////////////////////////////////////////////////////////////	
-
-function initFileObjects() {
-        // list of OBJ files that we want to load, and their material
-    models = {     
-//	bunny:     {obj:"obj/bunny.obj", mtl: diffuseMaterial, mesh: null},
-//	horse:     {obj:"obj/horse.obj", mtl: diffuseMaterial, mesh: null },
-//	minicooper:{obj:"obj/minicooper.obj", mtl: diffuseMaterial, mesh: null },
-//	trex:      { obj:"obj/trex.obj", mtl: normalShaderMaterial, mesh: null },
-	teapot:    {obj:"obj/teapot.obj", mtl: customShaderMaterial, mesh: null	},
-	armadillo: {obj:"obj/armadillo.obj", mtl: customShaderMaterial, mesh: null },
-	dragon:    {obj:"obj/dragon.obj", mtl: customShaderMaterial, mesh: null }
-    };
-
-    var manager = new THREE.LoadingManager();
-    manager.onLoad = function () {
-	console.log("loaded all resources");
-	RESOURCES_LOADED = true;
-	onResourcesLoaded();
-    }
-    var onProgress = function ( xhr ) {
-	if ( xhr.lengthComputable ) {
-	    var percentComplete = xhr.loaded / xhr.total * 100;
-	    console.log( Math.round(percentComplete, 2) + '% downloaded' );
-	}
-    };
-    var onError = function ( xhr ) {
-    };
-
-    // Load models;  asynchronous in JS, so wrap code in a fn and pass it the index
-    for( var _key in models ){
-	console.log('Key:', _key);
-	(function(key){
-	    var objLoader = new THREE.OBJLoader( manager );
-	    objLoader.load( models[key].obj, function ( object ) {
-		object.traverse( function ( child ) {
-		    if ( child instanceof THREE.Mesh ) {
-			child.material = models[key].mtl;
-			child.material.shading = THREE.SmoothShading;
-		    }	} );
-		models[key].mesh = object;
-//		scene.add( object );
-	    }, onProgress, onError );
-	})(_key);
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
-// onResourcesLoaded():  once all OBJ files are loaded, this gets called
-//                       Object instancing is done here
-/////////////////////////////////////////////////////////////////////////////////////
-
-function onResourcesLoaded(){
-	
- // Clone models into meshes;   [Michiel:  AFAIK this makes a "shallow" copy of the model,
- //                             i.e., creates references to the geometry, and not full copies ]
-    meshes["armadillo1"] = models.armadillo.mesh.clone();
-    meshes["armadillo2"] = models.armadillo.mesh.clone();
-    meshes["dragon1"] = models.dragon.mesh.clone();
-    meshes["dragon2"] = models.dragon.mesh.clone();
-    meshes["teapot1"] = models.teapot.mesh.clone();
-    
-    // position the object instances and parent them to the scene, i.e., WCS
-    
-    meshes["armadillo1"].position.set(-6, 1.5, 2);
-    meshes["armadillo1"].rotation.set(0,-Math.PI/2,0);
-    meshes["armadillo1"].scale.set(1,1,1);
-    scene.add(meshes["armadillo1"]);
-
-    meshes["armadillo2"].position.set(-3, 1.5, 2);
-    meshes["armadillo2"].rotation.set(0,-Math.PI/2,0);
-    meshes["armadillo2"].scale.set(1,1,1);
-    scene.add(meshes["armadillo2"]);
-
-    meshes["dragon1"].position.set(-5, 0.2, 4);
-    meshes["dragon1"].rotation.set(0, Math.PI, 0);
-    meshes["dragon1"].scale.set(0.3,0.3,0.3);
-    scene.add(meshes["dragon1"]);
-
-    meshes["dragon2"].position.set(5, 5, 5);
-    meshes["dragon2"].rotation.set(0, 0, Math.PI);
-    meshes["dragon2"].scale.set(0.1,0.1,0.1);
-    scene.add(meshes["dragon2"]);
-
-    meshes["teapot1"].position.set(3, 0, 3);
-    meshes["teapot1"].scale.set(0.5, 0.5, 0.5);
-    scene.add(meshes["teapot1"]);
-
-    meshesLoaded = true;
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -274,9 +228,9 @@ function onResourcesLoaded(){
 
 var keyboard = new THREEx.KeyboardState();
 function checkKeyboard() {
-  if (keyboard.pressed("W")) 
+  if (keyboard.pressed("W"))
     light.position.y += 0.1;
-  else if (keyboard.pressed("S")) 
+  else if (keyboard.pressed("S"))
     light.position.y -= 0.1;
   else if (keyboard.pressed("A"))
     light.position.x -= 0.1;
@@ -291,14 +245,14 @@ function checkKeyboard() {
 ///////////////////////////////////////////////////////////////////////////////////////
 
 function update() {
-    var dt=0.02;
-    checkKeyboard();
-    if (animation && meshesLoaded) {
-	    // advance the motion of all the animated objects
-    }
-  
-    requestAnimationFrame(update);      // requests the next update call;  this creates a loop
-    renderer.render(scene, camera);
+  var dt = 0.02;
+  checkKeyboard();
+  if (animation && meshesLoaded) {
+    // advance the motion of all the animated objects
+  }
+
+  requestAnimationFrame(update);      // requests the next update call;  this creates a loop
+  renderer.render(scene, camera);
 }
 
 init();

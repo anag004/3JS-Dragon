@@ -148,8 +148,12 @@ function handSetMatrices(avars) {
     linkFrame1.matrix.identity(); 
     linkFrame1.matrix.multiply(new THREE.Matrix4().makeTranslation(xPosition,yPosition,0));   
     linkFrame1.matrix.multiply(new THREE.Matrix4().makeRotationZ(theta1));    
-      // Frame 1 has been established
-    link1.matrix.copy(linkFrame1.matrix);
+    
+    // Frame 1 has been established
+    // link1.matrix.copy(linkFrame1.matrix);
+    link1.matrix.identity(); 
+    link1.matrix.multiply(new THREE.Matrix4().makeTranslation(xPosition,yPosition,0));   
+    link1.matrix.multiply(new THREE.Matrix4().makeRotationZ(theta1));   
     link1.matrix.multiply(new THREE.Matrix4().makeTranslation(2,0,0));   
     link1.matrix.multiply(new THREE.Matrix4().makeScale(8,1,4));    
 
@@ -173,7 +177,7 @@ function handSetMatrices(avars) {
 
       /////////////// link4
     linkFrame4.matrix.copy(linkFrame1.matrix);
-    linkFrame4.matrix.multiply(new THREE.Matrix4().makeTranslation(6,0,-2.5));
+    linkFrame4.matrix.multiply(new THREE.Matrix4().makeTranslation(4,0,-2.5));
     linkFrame4.matrix.multiply(new THREE.Matrix4().makeRotationZ(theta4));    
     
       // Frame 4 has been established
