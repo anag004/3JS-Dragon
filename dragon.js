@@ -522,16 +522,19 @@ ctx.getShaderInfoLog = function () { return '' };   // stops shader warnings, se
 
 var keyboard = new THREEx.KeyboardState();
 function checkKeyboard() {
-  if (keyboard.pressed("W"))
-    light.position.y += 0.1;
-  else if (keyboard.pressed("S"))
-    light.position.y -= 0.1;
-  else if (keyboard.pressed("A"))
-    light.position.x -= 0.1;
-  else if (keyboard.pressed("D"))
-    light.position.x += 0.1;
-  else if (keyboard.pressed(" "))
-    animation = !animation;
+  if (keyboard.pressed("R")) {
+    if (!danceSequence && animation && meshesLoaded) {
+      danceSequence = true;
+      dragonRollSequence = true;
+      rollStartTime = t;
+    }
+  } else if (keyboard.pressed("L")) {
+    if (!danceSequence && animation && meshesLoaded) {
+      danceSequence = true;
+      dragonLoopSequence = true;
+      loopStartTime = t;
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -578,14 +581,13 @@ function dragonRoll() {
     return;
   } else if (theta >= rollSpan) {
     danceSequence = false;
-    dragonLoopSequence = false;
+    dragonRollSequence = false;
     return;
   } else {
     wingAngle = Math.PI / 4 * Math.sin(wingSpeed * etime);
     dragonBodyFrame.matrix.identity();
     dragonBodyFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(rollRadius * Math.sin(theta), -rollRadius * (1 - Math.cos(theta)) + rollRadius / 10, 0));
     dragonBodyFrame.matrix.multiply(new THREE.Matrix4().makeRotationZ(theta));
-    console.log(comp);
     dragonBodyFrame.matrix.multiply(new THREE.Matrix4().makeRotationX(2 * Math.PI * comp));
     dragonBodyFrame.updateMatrixWorld();
 
@@ -609,12 +611,8 @@ function update() {
   checkKeyboard();
   if (animation && meshesLoaded) {
     t += dt;
-    if (!danceSequence) {
-      danceSequence = true;
-      dragonRollSequence = true;
-      rollStartTime = t;
-    }
     dragonRoll();
+    dragonLoop();
   }
   requestAnimationFrame(update);      // requests the next update call;  this creates a loop
   renderer.render(scene, camera);
