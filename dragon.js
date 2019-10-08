@@ -29,8 +29,10 @@ var danceSequence = false, dragonLoopSequence = false, dragonRollSequence = fals
 var loopStartTime, loopRadius = 10, loopSpeed = Math.PI / 2;
 var rollStartTime, rollRadius = 50, rollSpeed = Math.PI / 6, rollSpan = Math.PI / 6;
 var t = 0;
-var wingSpeedMax = 4 * Math.PI, wingSpeedIncr = Math.PI / 20, currWingSpeed = Math.PI, currWingAngle = 0;
+var wingSpeedMax = 4 * Math.PI, wingSpeedIncr = Math.PI / 20, currWingSpeed = Math.PI, currWingAngle = 0, minWingSpeed = Math.PI / 4;
 var currNeckAngle = Math.PI / 6, neckAngleIncr = Math.PI / 500, maxNeckAngle = Math.PI / 6;
+var currRollAngle = 0, rollAngleIncr = Math.PI / 500;
+var currPitchAngle = 0, pitchAngleIncr = Math.PI / 500, maxPitchAngle = Math.PI / 4;
 renderer.setClearColor(0x424242);     // set background colour
 canvas.appendChild(renderer.domElement);
 
@@ -534,7 +536,7 @@ function checkKeyboard() {
       dragonLoopSequence = true;
       loopStartTime = t;
     } else if (keyboard.pressed("S")) {
-      if (currWingSpeed > wingSpeedIncr) {
+      if (currWingSpeed > minWingSpeed + wingSpeedIncr) {
         currWingSpeed -= wingSpeedIncr;
       }
       if (currNeckAngle < maxNeckAngle - neckAngleIncr) {
@@ -546,6 +548,27 @@ function checkKeyboard() {
       }
       if (currNeckAngle > neckAngleIncr) {
         currNeckAngle -= neckAngleIncr;
+      }
+    }
+    if (keyboard.pressed("A")) {
+      currRollAngle -= rollAngleIncr;
+    } else if (keyboard.pressed("D")) {
+      currRollAngle += rollAngleIncr;
+    }
+
+    if (keyboard.pressed("H")) {
+      if (currPitchAngle < maxPitchAngle - pitchAngleIncr) {
+        currPitchAngle += pitchAngleIncr;
+      }
+      if (currNeckAngle > neckAngleIncr) {
+        currNeckAngle -= neckAngleIncr;
+      }
+    } else if (keyboard.pressed("J")) {
+      if (currPitchAngle > -maxPitchAngle + pitchAngleIncr) {
+        currPitchAngle -= pitchAngleIncr;
+      }
+      if (currNeckAngle < maxNeckAngle - neckAngleIncr) {
+        currNeckAngle += neckAngleIncr;
       }
     }
   }
@@ -629,6 +652,16 @@ function update() {
     dragonLoop();
     if (!danceSequence) {
       currWingAngle += dt * currWingSpeed;
+    
+      dragonBodyFrame.matrix.identity();
+      dragonBodyFrame.matrix.multiply(new THREE.Matrix4().makeRotationZ(currPitchAngle));
+      dragonBodyFrame.matrix.multiply(new THREE.Matrix4().makeRotationX(currRollAngle));
+      dragonBodyFrame.updateMatrixWorld();
+  
+      dragonBody.matrix.copy(dragonBodyFrame.matrix);
+      dragonBody.matrix.multiply(new THREE.Matrix4().makeScale(4, 1, 2));
+      dragonBodyFrame.updateMatrixWorld();  
+
       modifyWingAngle(Math.PI / 4 * Math.cos(currWingAngle));
       modifyNeckLinks(currNeckAngle);
       modifyTailLinks(currNeckAngle);
