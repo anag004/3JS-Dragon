@@ -3,16 +3,8 @@
 //  Assignment 3 Template
 /////////////////////////////////////////////////////////////////////////////////////////
 
-console.log('hello world');
-
-a = 5;
-b = 2.6;
-console.log('a=', a, 'b=', b);
-myvector = new THREE.Vector3(0, 1, 2);
-console.log('myvector =', myvector);
-
 var animation = true;
-var meshesLoaded = true;
+var meshesLoaded = false;
 
 var meshes = {};
 var RESOURCES_LOADED = false;
@@ -33,7 +25,7 @@ var headLength, headWidth, headSnout;
 var numTail, incrWidthTail, incrLengthTail, currLengthTail, currWidthTail, currHeightTail;
 var dragonNeckLinkFrames = [], dragonNeckLinks = [];
 var leftWingFrame, rightWingFrame;
-var angle = Math.PI / 6, dir = 1;
+var angle = 0, dir = 1;
 var angle2 = Math.PI / 6, dir2 = 1;
 renderer.setClearColor(0x424242);     // set background colour
 canvas.appendChild(renderer.domElement);
@@ -80,7 +72,6 @@ window.onscroll = function () {
 ////////////////////////////////////////////////////////////////////////	
 
 function init() {
-  console.log('init called');
 
   initCamera();
   initMotions();
@@ -229,7 +220,7 @@ function onResourcesLoaded(){
   rightWingFrame = new THREE.AxesHelper(1); scene.add(rightWingFrame);
   rightWingFrame.matrixAutoUpdate = false;
   rightWingFrame.matrix.copy(dragonBodyFrame.matrix);
-  rightWingFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(1, 0.3, 0.7));
+  rightWingFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(1, 0, 1));
   rightWingFrame.matrix.multiply(new THREE.Matrix4().makeRotationX(-Math.PI/12));
   rightWingFrame.updateMatrixWorld();
 
@@ -239,7 +230,7 @@ function onResourcesLoaded(){
   meshes["rightWing"].matrix.multiply(new THREE.Matrix4().makeScale(1.5, 1.5, 1.5));
   meshes["rightWing"].matrix.multiply(new THREE.Matrix4().makeRotationX(Math.PI));
   meshes["rightWing"].matrix.multiply(new THREE.Matrix4().makeRotationY(-Math.PI/2));
-  meshes["rightWing"].matrix.multiply(new THREE.Matrix4().makeTranslation(-3, 0, 1.5));
+  meshes["rightWing"].matrix.multiply(new THREE.Matrix4().makeTranslation(-3.3, 0.1, 1.5));
   meshes["rightWing"].updateMatrixWorld();
 
   // Set up coordinate frame for the left wing
@@ -247,7 +238,7 @@ function onResourcesLoaded(){
   leftWingFrame.matrixAutoUpdate = false;
   leftWingFrame.matrix.copy(dragonBodyFrame.matrix);
   leftWingFrame.matrix.multiply(new THREE.Matrix4().makeScale(1, 1, -1));
-  leftWingFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(1, 0.3, 0.7));
+  leftWingFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(1, 0, 1));
   leftWingFrame.matrix.multiply(new THREE.Matrix4().makeRotationX(-Math.PI/12));
   leftWingFrame.updateMatrixWorld();
 
@@ -258,7 +249,7 @@ function onResourcesLoaded(){
   meshes["leftWing"].matrix.multiply(new THREE.Matrix4().makeRotationX(Math.PI));
   meshes["leftWing"].matrix.multiply(new THREE.Matrix4().makeRotationY(-Math.PI/2));
   // meshes["rightWing"].multiply(new THREE.Matrix4().);
-  meshes["leftWing"].matrix.multiply(new THREE.Matrix4().makeTranslation(-3, 0, 1.5));
+  meshes["leftWing"].matrix.multiply(new THREE.Matrix4().makeTranslation(-3.3, 0.1, 1.5));
   meshes["leftWing"].updateMatrixWorld();
 
   // position the object instances and parent them to the scene, i.e., WCS
@@ -267,6 +258,48 @@ function onResourcesLoaded(){
   
   meshesLoaded = true;
  }
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Modify the wing angle
+/////////////////////////////////////////////////////////////////////////////////////
+
+function modifyWingAngle(angle){  
+  if (!meshesLoaded || angle > Math.PI / 4 || angle < -Math.PI / 4) {
+    return;
+  }
+  console.log("Called with angle ", angle)
+  // Set up coordinate frame for the right wing
+  rightWingFrame.matrix.copy(dragonBodyFrame.matrix);
+  rightWingFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(1, 0, 1));
+  rightWingFrame.matrix.multiply(new THREE.Matrix4().makeRotationX(angle));
+  rightWingFrame.updateMatrixWorld();
+
+  // Set up the matrix for the right wing object
+  meshes["rightWing"].matrix.copy(rightWingFrame.matrix);
+  meshes["rightWing"].matrix.multiply(new THREE.Matrix4().makeScale(1.5, 1.5, 1.5));
+  meshes["rightWing"].matrix.multiply(new THREE.Matrix4().makeRotationX(Math.PI));
+  meshes["rightWing"].matrix.multiply(new THREE.Matrix4().makeRotationY(-Math.PI/2));
+  meshes["rightWing"].matrix.multiply(new THREE.Matrix4().makeTranslation(-3.3, 0.1, 1.5));
+  meshes["rightWing"].updateMatrixWorld();
+
+  // Set up coordinate frame for the left wing
+  leftWingFrame.matrix.copy(dragonBodyFrame.matrix);
+  leftWingFrame.matrix.multiply(new THREE.Matrix4().makeScale(1, 1, -1));
+  leftWingFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(1, 0, 1));
+  leftWingFrame.matrix.multiply(new THREE.Matrix4().makeRotationX(angle));
+  leftWingFrame.updateMatrixWorld();
+
+  // Set up the matrix for the right wing object
+  meshes["leftWing"].matrix.copy(leftWingFrame.matrix);
+  meshes["leftWing"].matrix.multiply(new THREE.Matrix4().makeScale(1.5, 1.5, 1.5));
+  meshes["leftWing"].matrix.multiply(new THREE.Matrix4().makeRotationX(Math.PI));
+  meshes["leftWing"].matrix.multiply(new THREE.Matrix4().makeRotationY(-Math.PI/2));
+  meshes["leftWing"].matrix.multiply(new THREE.Matrix4().makeTranslation(-3.3, 0.1, 1.5));
+  meshes["leftWing"].updateMatrixWorld();
+}
+
+ 
  
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -461,7 +494,6 @@ function modifyTailLinks(angle) {
 
     // Update currMatrix
     currMatrix.multiply(new THREE.Matrix4().makeTranslation(-currLength, 0, 0));
-    console.log("Rotating by ", theta);
     currMatrix.multiply(new THREE.Matrix4().makeRotationZ(theta));
 
     // Update currLength, currWidth
@@ -509,19 +541,16 @@ function update() {
   var dt = 0.02;
   checkKeyboard();
   if (animation && meshesLoaded) {
-    var incr = Math.PI / 1000;
+    var incr = Math.PI / 100;
     var incr2 = Math.PI / 200;
-    // console.log("Incrementing by ", incr);
     angle += dir * incr;
     angle2 -= dir2 * incr2;
-    if (angle > Math.PI / 2) {
+    if (angle > Math.PI / 4) {
       dir = -1;
-    } else if (angle < -Math.PI / 2) {
+    } else if (angle < -Math.PI / 4) {
       dir = 1;
     }
-    // console.log("Calling with angle ", angle);
-    modifyNeckLinks(angle);
-    modifyTailLinks(angle2);
+    modifyWingAngle(angle);
   }
 
   requestAnimationFrame(update);      // requests the next update call;  this creates a loop
