@@ -34,6 +34,7 @@ var numTail, incrWidthTail, incrLengthTail, currLengthTail, currWidthTail, currH
 var dragonNeckLinkFrames = [], dragonNeckLinks = [];
 var leftWingFrame, rightWingFrame;
 var angle = Math.PI / 6, dir = 1;
+var angle2 = Math.PI / 6, dir2 = 1;
 renderer.setClearColor(0x424242);     // set background colour
 canvas.appendChild(renderer.domElement);
 
@@ -331,7 +332,6 @@ function initNeckLinks() {
 /////////////////////////////////////////////////////////////////////////////////////
 
 function modifyNeckLinks(angle) {
-  console.log("Called with angle ", angle)
   if (angle > Math.PI / 2 || angle < - Math.PI / 2) {
     return;
   }
@@ -426,6 +426,50 @@ function initTailLinks() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
+//  Modify the joint angle for the tails
+/////////////////////////////////////////////////////////////////////////////////////
+
+function modifyTailLinks(angle) {
+  var theta = angle / numNeck;
+  if (angle > Math.PI || angle < -Math.PI) {
+    return;
+  }
+  var currMatrix = new THREE.Matrix4().copy(dragonBodyFrame.matrix);
+  currMatrix.multiply(new THREE.Matrix4().makeTranslation(-2, 0.5, 0));
+  currMatrix.multiply(new THREE.Matrix4().makeRotationZ(theta));
+
+  var currLength = currLengthTail, currWidth = currWidthTail, currHeight = currHeightTail;
+
+  for (var i = 0; i < numTail; i++) {
+    var dragonTailLinkFrame, dragonTailLink;
+
+    // Create the NeckLink frame
+    dragonTailLinkFrame = dragonTailLinkFrames[i];
+    dragonTailLinkFrame.matrixAutoUpdate = false;
+    dragonTailLinkFrame.matrix.copy(currMatrix);
+    dragonTailLinkFrame.updateMatrixWorld();
+    dragonTailLinkFrames[i] = dragonTailLinkFrame;
+
+    // Create the body block
+    dragonTailLink = dragonTailLinks[i];
+    dragonTailLink.matrixAutoUpdate = false;
+    dragonTailLink.matrix.copy(currMatrix);
+    dragonTailLink.matrix.multiply(new THREE.Matrix4().makeTranslation(-currLength / 2, -currHeight / 2, 0));
+    dragonTailLink.matrix.multiply(new THREE.Matrix4().makeScale(currLength, currHeight, currWidth));
+    dragonTailLinks[i] = dragonTailLink;
+    dragonTailLink.updateMatrixWorld();
+
+    // Update currMatrix
+    currMatrix.multiply(new THREE.Matrix4().makeTranslation(-currLength, 0, 0));
+    console.log("Rotating by ", theta);
+    currMatrix.multiply(new THREE.Matrix4().makeRotationZ(theta));
+
+    // Update currLength, currWidth
+    currLength += incrLengthTail; currWidth -= incrWidthTail; currHeight -= incrHeightTail;
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
 //  create customShader material
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -466,8 +510,10 @@ function update() {
   checkKeyboard();
   if (animation && meshesLoaded) {
     var incr = Math.PI / 1000;
+    var incr2 = Math.PI / 200;
     // console.log("Incrementing by ", incr);
     angle += dir * incr;
+    angle2 -= dir2 * incr2;
     if (angle > Math.PI / 2) {
       dir = -1;
     } else if (angle < -Math.PI / 2) {
@@ -475,6 +521,7 @@ function update() {
     }
     // console.log("Calling with angle ", angle);
     modifyNeckLinks(angle);
+    modifyTailLinks(angle2);
   }
 
   requestAnimationFrame(update);      // requests the next update call;  this creates a loop
