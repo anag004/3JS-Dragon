@@ -340,7 +340,7 @@ function initHand() {
     link5 = new THREE.Mesh( boxGeometry, handMaterial );  scene.add( link5 );
     linkFrame5   = new THREE.AxesHelper(1) ;   scene.add(linkFrame5);
 
-    link1.matrixAutoUpdate = false;  
+    link1.matrixAutoUpdate = falsie;  
     link2.matrixAutoUpdate = false;  
     link3.matrixAutoUpdate = false;  
     link4.matrixAutoUpdate = false;  
