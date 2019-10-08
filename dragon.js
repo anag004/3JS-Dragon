@@ -29,6 +29,8 @@ var danceSequence = false, dragonLoopSequence = false, dragonRollSequence = fals
 var loopStartTime, loopRadius = 10, loopSpeed = Math.PI / 2;
 var rollStartTime, rollRadius = 50, rollSpeed = Math.PI / 6, rollSpan = Math.PI / 6;
 var t = 0;
+var wingSpeedMax = 4 * Math.PI, wingSpeedIncr = Math.PI / 20, currWingSpeed = Math.PI, currWingAngle = 0;
+var currNeckAngle = Math.PI / 6, neckAngleIncr = Math.PI / 500, maxNeckAngle = Math.PI / 6;
 renderer.setClearColor(0x424242);     // set background colour
 canvas.appendChild(renderer.domElement);
 
@@ -522,20 +524,32 @@ ctx.getShaderInfoLog = function () { return '' };   // stops shader warnings, se
 
 var keyboard = new THREEx.KeyboardState();
 function checkKeyboard() {
-  if (keyboard.pressed("R")) {
-    if (!danceSequence && animation && meshesLoaded) {
-      danceSequence = true;
-      dragonRollSequence = true;
-      rollStartTime = t;
-    }
-  } else if (keyboard.pressed("L")) {
-    if (!danceSequence && animation && meshesLoaded) {
+  if (!danceSequence && animation && meshesLoaded) {
+    if (keyboard.pressed("R")) {
+        danceSequence = true;
+        dragonRollSequence = true;
+        rollStartTime = t;
+    } else if (keyboard.pressed("L")) {
       danceSequence = true;
       dragonLoopSequence = true;
       loopStartTime = t;
+    } else if (keyboard.pressed("S")) {
+      if (currWingSpeed > wingSpeedIncr) {
+        currWingSpeed -= wingSpeedIncr;
+      }
+      if (currNeckAngle < maxNeckAngle - neckAngleIncr) {
+        currNeckAngle += neckAngleIncr;
+      } 
+    } else if (keyboard.pressed("W")) {
+      if (currWingSpeed < wingSpeedMax - wingSpeedIncr) {
+        currWingSpeed += wingSpeedIncr;
+      }
+      if (currNeckAngle > neckAngleIncr) {
+        currNeckAngle -= neckAngleIncr;
+      }
     }
   }
-}
+} 
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // The dragon does a loop de loop
@@ -613,6 +627,12 @@ function update() {
     t += dt;
     dragonRoll();
     dragonLoop();
+    if (!danceSequence) {
+      currWingAngle += dt * currWingSpeed;
+      modifyWingAngle(Math.PI / 4 * Math.cos(currWingAngle));
+      modifyNeckLinks(currNeckAngle);
+      modifyTailLinks(currNeckAngle);
+    }
   }
   requestAnimationFrame(update);      // requests the next update call;  this creates a loop
   renderer.render(scene, camera);
