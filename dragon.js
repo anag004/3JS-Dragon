@@ -25,8 +25,9 @@ var headLength, headWidth, headSnout;
 var numTail, incrWidthTail, incrLengthTail, currLengthTail, currWidthTail, currHeightTail;
 var dragonNeckLinkFrames = [], dragonNeckLinks = [];
 var leftWingFrame, rightWingFrame;
-var angle = 0, dir = 1;
-var angle2 = Math.PI / 6, dir2 = 1;
+var danceSequence = false, dragonLoopSequence = false;
+var loopStartTime, loopRadius = 10, loopSpeed = Math.PI / 2;
+var t = 0;
 renderer.setClearColor(0x424242);     // set background colour
 canvas.appendChild(renderer.domElement);
 
@@ -534,6 +535,37 @@ function checkKeyboard() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+// The dragon does a loop de loop
+///////////////////////////////////////////////////////////////////////////////////////
+
+function dragonLoop() {
+  var etime = t - loopStartTime;
+  var theta = loopSpeed * etime;
+  var wingSpeed = Math.PI , wingAngle;
+  if (!dragonLoopSequence) {
+    return;
+  } else if (theta >= 2 * Math.PI) {
+    danceSequence = false;
+    dragonLoopSequence = false;
+    return;
+  } else {
+    wingAngle = Math.PI / 4 * Math.sin(wingSpeed * etime);
+    dragonBodyFrame.matrix.identity();
+    dragonBodyFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(loopRadius * Math.sin(theta), loopRadius * (1 - Math.cos(theta)), 0));
+    dragonBodyFrame.matrix.multiply(new THREE.Matrix4().makeRotationZ(theta));
+    dragonBodyFrame.updateMatrixWorld();
+
+    dragonBody.matrix.copy(dragonBodyFrame.matrix);
+    dragonBody.matrix.multiply(new THREE.Matrix4().makeScale(4, 1, 2));
+    dragonBodyFrame.updateMatrixWorld();
+
+    modifyNeckLinks(Math.PI / 3 * Math.sin(theta / 2));
+    modifyTailLinks(- Math.PI / 3 * Math.sin(theta / 2));
+    modifyWingAngle(wingAngle);
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
 // UPDATE CALLBACK:    This is the main animation loop
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -541,18 +573,14 @@ function update() {
   var dt = 0.02;
   checkKeyboard();
   if (animation && meshesLoaded) {
-    var incr = Math.PI / 100;
-    var incr2 = Math.PI / 200;
-    angle += dir * incr;
-    angle2 -= dir2 * incr2;
-    if (angle > Math.PI / 4) {
-      dir = -1;
-    } else if (angle < -Math.PI / 4) {
-      dir = 1;
+    t += dt;
+    if (!danceSequence) {
+      danceSequence = true;
+      dragonLoopSequence = true;
+      loopStartTime = t;
     }
-    modifyWingAngle(angle);
+    dragonLoop();
   }
-
   requestAnimationFrame(update);      // requests the next update call;  this creates a loop
   renderer.render(scene, camera);
 }
