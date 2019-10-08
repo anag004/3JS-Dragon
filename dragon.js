@@ -20,6 +20,7 @@ var renderer = new THREE.WebGLRenderer();
 var boxGeom;
 var dragonBody, dragonBodyFrame, dragonHeadFrame, dragonHead;
 var dragonTailLinkFrames = [], dragonTailLinks = [];
+var leftLegFrame, leftLegBody, rightLegFrame, rightLegBody;
 var numNeck, incrWidthNeck, incrLengthNeck, currLengthNeck, currWidthNeck;
 var headLength, headWidth, headSnout;
 var numTail, incrWidthTail, incrLengthTail, currLengthTail, currWidthTail, currHeightTail;
@@ -141,6 +142,39 @@ function initObjects() {
   dragonBody.matrix.copy(dragonBodyFrame.matrix);
   dragonBody.matrix.multiply(new THREE.Matrix4().makeScale(4, 1, 2));
   dragonBodyFrame.updateMatrixWorld();
+
+  // Left leg frame of the dragon
+  leftLegFrame = new THREE.AxesHelper(1); scene.add(leftLegFrame);
+  leftLegFrame.matrixAutoUpdate = false;
+  leftLegFrame.matrix.copy(dragonBodyFrame.matrix);
+  leftLegFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(0, -0.5, 0.5));
+  leftLegFrame.matrix.multiply(new THREE.Matrix4().makeRotationZ(-Math.PI/3 + currNeckAngle));
+  leftLegFrame.updateMatrixWorld();
+
+  // Left leg of the dragon
+  leftLegBody = new THREE.Mesh(boxGeom, diffuseMaterial);
+  scene.add(leftLegBody);
+  leftLegBody.matrixAutoUpdate = false;
+  leftLegBody.matrix.copy(leftLegFrame.matrix);
+  leftLegBody.matrix.multiply(new THREE.Matrix4().makeTranslation(0, -1, 0));
+  leftLegBody.matrix.multiply(new THREE.Matrix4().makeScale(0.3, 1.5, 0.3));
+
+  // Right leg frame of the dragon
+  rightLegFrame = new THREE.AxesHelper(1); scene.add(rightLegFrame);
+  rightLegFrame.matrixAutoUpdate = false;
+  rightLegFrame.matrix.copy(dragonBodyFrame.matrix);
+  rightLegFrame.matrix.multiply(new THREE.Matrix4().makeScale(1, 1, -1));
+  rightLegFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(0, -0.5, 0.5));
+  rightLegFrame.matrix.multiply(new THREE.Matrix4().makeRotationZ(-Math.PI/3 + currNeckAngle));
+  rightLegFrame.updateMatrixWorld();
+
+  // Right leg of the dragon
+  rightLegBody = new THREE.Mesh(boxGeom, diffuseMaterial);
+  scene.add(rightLegBody);
+  rightLegBody.matrixAutoUpdate = false;
+  rightLegBody.matrix.copy(rightLegFrame.matrix);
+  rightLegBody.matrix.multiply(new THREE.Matrix4().makeTranslation(0, -1, 0));
+  rightLegBody.matrix.multiply(new THREE.Matrix4().makeScale(0.3, 1.5, 0.3));
 
   numNeck = 10; incrWidthNeck = 0.1; incrLengthNeck = 0.05; currLengthNeck = 0.2; currWidthNeck = 1.75;
   headLength = 1; headWidth = 1.5; headSnout = 2;
@@ -599,6 +633,7 @@ function dragonLoop() {
     dragonBody.matrix.multiply(new THREE.Matrix4().makeScale(4, 1, 2));
     dragonBodyFrame.updateMatrixWorld();
 
+    updateLegs(Math.PI / 3 * Math.sin(theta / 2));
     modifyNeckLinks(Math.PI / 3 * Math.sin(theta / 2));
     modifyTailLinks(- Math.PI / 3 * Math.sin(theta / 2));
     modifyWingAngle(wingAngle);
@@ -632,12 +667,37 @@ function dragonRoll() {
     dragonBody.matrix.multiply(new THREE.Matrix4().makeScale(4, 1, 2));
     dragonBodyFrame.updateMatrixWorld();
 
+    updateLegs(Math.PI / 6 * Math.cos(comp * Math.PI));
     modifyNeckLinks(Math.PI / 6 * Math.cos(comp * Math.PI));
     modifyTailLinks(- Math.PI / 3 * Math.cos(comp * Math.PI));
     modifyWingAngle(wingAngle);
   }
 }
 
+function updateLegs(theta) {
+  // Left leg frame of the dragon
+  leftLegFrame.matrix.copy(dragonBodyFrame.matrix);
+  leftLegFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(0, -0.5, 0.5));
+  leftLegFrame.matrix.multiply(new THREE.Matrix4().makeRotationZ(-Math.PI/3 + theta));
+  leftLegFrame.updateMatrixWorld();
+
+  // Left leg of the dragon
+  leftLegBody.matrix.copy(leftLegFrame.matrix);
+  leftLegBody.matrix.multiply(new THREE.Matrix4().makeTranslation(0, -0.5, 0));
+  leftLegBody.matrix.multiply(new THREE.Matrix4().makeScale(0.3, 1.5, 0.3));
+
+  // Right leg frame of the dragon
+  rightLegFrame.matrix.copy(dragonBodyFrame.matrix);
+  rightLegFrame.matrix.multiply(new THREE.Matrix4().makeScale(1, 1, -1));
+  rightLegFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(0, -0.5, 0.5));
+  rightLegFrame.matrix.multiply(new THREE.Matrix4().makeRotationZ(-Math.PI/3 + theta));
+  rightLegFrame.updateMatrixWorld();
+
+  // Right leg of the dragon
+  rightLegBody.matrix.copy(rightLegFrame.matrix);
+  rightLegBody.matrix.multiply(new THREE.Matrix4().makeTranslation(0, -0.5, 0));
+  rightLegBody.matrix.multiply(new THREE.Matrix4().makeScale(0.3, 1.5, 0.3));
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // UPDATE CALLBACK:    This is the main animation loop
@@ -661,6 +721,9 @@ function update() {
       dragonBody.matrix.copy(dragonBodyFrame.matrix);
       dragonBody.matrix.multiply(new THREE.Matrix4().makeScale(4, 1, 2));
       dragonBodyFrame.updateMatrixWorld();  
+
+      updateLegs(currNeckAngle);
+      updateLegs(currNeckAngle);
 
       modifyWingAngle(Math.PI / 4 * Math.cos(currWingAngle));
       modifyNeckLinks(currNeckAngle);
