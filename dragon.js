@@ -25,8 +25,9 @@ var headLength, headWidth, headSnout;
 var numTail, incrWidthTail, incrLengthTail, currLengthTail, currWidthTail, currHeightTail;
 var dragonNeckLinkFrames = [], dragonNeckLinks = [];
 var leftWingFrame, rightWingFrame;
-var danceSequence = false, dragonLoopSequence = false;
+var danceSequence = false, dragonLoopSequence = false, dragonRollSequence = false;
 var loopStartTime, loopRadius = 10, loopSpeed = Math.PI / 2;
+var rollStartTime, rollRadius = 50, rollSpeed = Math.PI / 6, rollSpan = Math.PI / 6;
 var t = 0;
 renderer.setClearColor(0x424242);     // set background colour
 canvas.appendChild(renderer.domElement);
@@ -269,7 +270,6 @@ function modifyWingAngle(angle){
   if (!meshesLoaded || angle > Math.PI / 4 || angle < -Math.PI / 4) {
     return;
   }
-  console.log("Called with angle ", angle)
   // Set up coordinate frame for the right wing
   rightWingFrame.matrix.copy(dragonBodyFrame.matrix);
   rightWingFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(1, 0, 1));
@@ -566,6 +566,41 @@ function dragonLoop() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+// The dragon does a roll
+///////////////////////////////////////////////////////////////////////////////////////
+
+function dragonRoll() {
+  var etime = t - rollStartTime;
+  var theta = rollSpeed * etime - rollSpan;
+  var wingSpeed = 2 * Math.PI , wingAngle;
+  var comp = (theta + rollSpan) / (2 * rollSpan);
+  if (!dragonRollSequence) {
+    return;
+  } else if (theta >= rollSpan) {
+    danceSequence = false;
+    dragonLoopSequence = false;
+    return;
+  } else {
+    wingAngle = Math.PI / 4 * Math.sin(wingSpeed * etime);
+    dragonBodyFrame.matrix.identity();
+    dragonBodyFrame.matrix.multiply(new THREE.Matrix4().makeTranslation(rollRadius * Math.sin(theta), -rollRadius * (1 - Math.cos(theta)) + rollRadius / 10, 0));
+    dragonBodyFrame.matrix.multiply(new THREE.Matrix4().makeRotationZ(theta));
+    console.log(comp);
+    dragonBodyFrame.matrix.multiply(new THREE.Matrix4().makeRotationX(2 * Math.PI * comp));
+    dragonBodyFrame.updateMatrixWorld();
+
+    dragonBody.matrix.copy(dragonBodyFrame.matrix);
+    dragonBody.matrix.multiply(new THREE.Matrix4().makeScale(4, 1, 2));
+    dragonBodyFrame.updateMatrixWorld();
+
+    modifyNeckLinks(Math.PI / 6 * Math.cos(comp * Math.PI));
+    modifyTailLinks(- Math.PI / 3 * Math.cos(comp * Math.PI));
+    modifyWingAngle(wingAngle);
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////
 // UPDATE CALLBACK:    This is the main animation loop
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -576,10 +611,10 @@ function update() {
     t += dt;
     if (!danceSequence) {
       danceSequence = true;
-      dragonLoopSequence = true;
-      loopStartTime = t;
+      dragonRollSequence = true;
+      rollStartTime = t;
     }
-    dragonLoop();
+    dragonRoll();
   }
   requestAnimationFrame(update);      // requests the next update call;  this creates a loop
   renderer.render(scene, camera);
