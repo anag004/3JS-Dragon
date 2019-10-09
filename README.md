@@ -1,5 +1,6 @@
-Name: Ananye Agarwal
-Student ID: 23835341
+Instructions:
+
+Start a local server in the repository and navigate to dragon.html 
 
 Hotkeys:
 
